@@ -122,7 +122,7 @@ Luffy bersama Zoro berencana membuat peta tersebut dengan kriteria EniesLobby se
      service squid restart
      ```
      
-     ## Soal 2
+## Soal 2
 
 Foosha sebagai DHCP Relay
 
@@ -210,6 +210,22 @@ Foosha sebagai DHCP Relay
      ```
  
 ## Soal 7
+- Luffy dan Zoro berencana menjadikan Skypie sebagai server untuk jual beli kapal yang dimilikinya dengan alamat IP yang tetap dengan IP [prefix IP].3.69
+
+Ubah konfigurasi jaringan pada Skypie dan atur hwaddress-nya:
+```
+auto eth0
+iface eth0 inet dhcp
+hwaddress ether 52:21:08:91:8d:49
+```
+
+Tambahkabn konfigurasi di Jipangu sebagai DHCP Server agar memberikan IP yang tetap ke Skypie dimana dia memiliki hwaddress sesuai yang sudah diatur di atas 
+```
+host Skypie {
+  hardware ethernet 52:21:08:91:8d:49;
+  fixed-address 192.168.3.69;
+}
+```
 
 ## Soal 8 
 - Loguetown digunakan sebagai client Proxy agar transaksi jual beli dapat terjamin keamanannya, juga untuk mencegah kebocoran data transaksi.
@@ -286,6 +302,24 @@ Karena Loguetown digunakan sebagai proxy client, kita set proxy di node Loguetow
 export http_proxy="http://jualbelikapal.b13.com:5000"
 
 ## Soal 9
+- Agar transaksi jual beli lebih aman dan pengguna website ada dua orang, proxy dipasang autentikasi user proxy dengan enkripsi MD5 dengan dua username, yaitu luffybelikapalyyy dengan password luffy_yyy dan zorobelikapalyyy dengan password zoro_yyy
+
+Buat file credential dengan perintah berikut
+```
+htpasswd -cm /etc/squid/passwd luffybelikapalb13
+htpasswd -m /etc/squid/passwd zorobelikapalb13
+```
+
+Include kedua file tersebut pada squid.conf
+```
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+auth_param basic children 5
+auth_param basic realm Proxy
+auth_param basic credentialsttl 2 hours
+auth_param basic casesensitive on
+acl USERS proxy_auth REQUIRED
+```
+
 
 ## Soal 10
 - Transaksi jual beli tidak dilakukan setiap hari, oleh karena itu akses internet dibatasi hanya dapat diakses setiap hari Senin-Kamis pukul 07.00-11.00 dan setiap hari Selasa-Jum’at pukul 17.00-03.00 keesokan harinya (sampai Sabtu pukul 03.00)
@@ -316,6 +350,14 @@ http_access allow USERS AVAILABLE_WORKING_3
 save file tersebut dan lakukan restart pada squid.
 
 ## Soal 11
+- Agar transaksi bisa lebih fokus berjalan, maka dilakukan redirect website agar mudah mengingat website transaksi jual beli kapal. Setiap mengakses google.com, akan diredirect menuju super.franky.yyy.com dengan website yang sama pada soal shift modul 2. Web server super.franky.yyy.com berada pada node Skypie
+
+Buat *acl* agar setiap ada request yang mengarah ke google.com, akan ditolak dan diarahkankan ke super.franky.b13.com
+```
+acl GOOGLE dstdomain .google.com
+http_access deny GOOGLE
+deny_info http://super.franky.b13.com/ GOOGLE
+```
 
 ## Soal 12
 -Saatnya berlayar! Luffy dan Zoro akhirnya memutuskan untuk berlayar untuk mencari harta karun di super.franky.yyy.com. Tugas pencarian dibagi menjadi dua misi, Luffy bertugas untuk mendapatkan gambar (.png, .jpg), sedangkan Zoro mendapatkan sisanya. Karena Luffy orangnya sangat teliti untuk mencari harta karun, ketika ia berhasil mendapatkan gambar, ia mendapatkan gambar dan melihatnya dengan kecepatan 10 kbps 
@@ -359,3 +401,5 @@ include /etc/squid/acl-bandwidth.conf
 save file dan lakukan restart pada squid
 
 ## Soal 13
+- Sedangkan, Zoro yang sangat bersemangat untuk mencari harta karun, sehingga kecepatan kapal Zoro tidak dibatasi ketika sudah mendapatkan harta yang diinginkannya
+Sebelumnya bandwidth user Zoro belum pernah dibatasi jadi sudah aman
